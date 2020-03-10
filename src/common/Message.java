@@ -1,27 +1,32 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package common;
 
 import java.io.Serializable;
 
-public class Message implements Serializable{
+
+public class Message implements Serializable {
     private String sender;
     private String content;
-
-    public Message (String s, String c) {
-        this.sender = s;
-        this.content = c;
-    }
-
-    public String toString() {
-        return sender+": "+content;
-    }
-
-    public String getSender() {
-        return sender;
-    }
-
-    public void setSender(String sender) {
+    
+    public Message(String sender, String content)
+    {
         this.sender = sender;
+        this.content = content;
     }
-
+    
+    public String toString() {
+         return "Emetteur du message : " + this.sender + "\nContenu du message : " + this.content;
+    }
+ 
+    public void setSender(String id) {
+        this.sender = id;
+    }
+    
+    public String getSender() {
+        return this.sender;
+    }
 }
-

@@ -1,65 +1,55 @@
+    /*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package server;
 
 import common.Message;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
+/**
+ *
+ * @author p1623040
+ */
 public class Server {
     private int port;
-    public static List<ConnectedClient> clients;
-
-    public Server(int p) {
-        this.port = p;
-        this.clients = new ArrayList();
-        System.out.println("Nouveau thread server");
+    private List<ConnectedClient> clients;
+    
+    public Server(int port) throws IOException {
+        this.port = port;
+        this.clients = new ArrayList<ConnectedClient>();
         Thread threadConnection = new Thread(new Connection(this));
         threadConnection.start();
     }
-
-    public void addClient(ConnectedClient newClient) {
-        Message mess = new Message("Server", newClient.getId() + "vient de se connecter");
-        Iterator var4 = this.clients.iterator();
-
-        while(var4.hasNext()) {
-            ConnectedClient client = (ConnectedClient)var4.next();
-            client.sendMessage(mess);
+    
+    public void addClient(ConnectedClient newClient) throws IOException {
+        for (ConnectedClient client : clients) {
+            client.sendMessage(new Message("Serveur", "Le client " + newClient.getId() + " vient de se connecter"));
         }
-
         this.clients.add(newClient);
     }
-
-    public void broadcastMessage(Message mess, int Id) {
-        System.out.println("bcast");
-        Iterator var4 = this.clients.iterator();
-
-        while(var4.hasNext()) {
-            ConnectedClient client = (ConnectedClient)var4.next();
-            System.out.println("serveur,id= " + Id);
-            if (client.getId() != Id) {
-                System.out.println("envoi à " + Id);
+    
+    public void broadcastMessage(Message mess, int id) throws IOException {
+        for (ConnectedClient client : clients) {
+            if (client.getId() != id) {
                 client.sendMessage(mess);
             }
         }
-
     }
-
-    public void disconnectedClient(ConnectedClient discClient) {
-        Iterator var3 = this.clients.iterator();
-
-        while(var3.hasNext()) {
-            ConnectedClient client = (ConnectedClient)var3.next();
-            client.sendMessage(new Message("server", "Le client " + discClient.getId() + " nous a quitté"));
+    
+    public void disconnectedClient(ConnectedClient discClient) throws IOException {
+        discClient.closeClient();
+        clients.remove(discClient);
+        System.out.println("Connexion fermée : Le Client " + discClient.getId() + " nous a quitté.");
+        for (ConnectedClient client : clients) {
+            client.sendMessage(new Message("Serveur", "Le client " + discClient.getId() + " nous a quitté"));
         }
-
     }
-
+    
     public int getPort() {
         return this.port;
     }
-
-    public int getNumClients() {
-        return this.clients.size();
-    }
 }
-

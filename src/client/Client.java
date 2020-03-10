@@ -1,67 +1,77 @@
+
 package client;
 
 import common.Message;
+import gui.ClientPanel;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+/**
+ * Classe encapsulant les interactions avec le serveur
+ */
 public class Client {
     private String address;
     private int port;
     private Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-
-    public Client(String ad, int p) {
-        this.address = ad;
-        this.port = p;
-
-        try {
-            System.out.println("Socket du client");
-            this.socket = new Socket(ad, p);
-            this.out = new ObjectOutputStream(this.socket.getOutputStream());
-            Thread threadClientSend = new Thread(new ClientSend(this, this.socket, this.out));
-            threadClientSend.start();
-            Thread threadClientReceive = new Thread(new ClientReceive(this, this.socket));
-            threadClientReceive.start();
-        } catch (UnknownHostException var5) {
-            System.out.println("Erreur client UnknownHostException");
-            var5.printStackTrace();
-        } catch (IOException var6) {
-            System.out.println("Erreur client IOException");
-            var6.printStackTrace();
-        }
-
+    public ClientPanel clientPanel;
+    
+    /**
+     * Constructeur de la classe Client
+     * @param address L'addresse du serveur distant
+     * @param port Le port sur lequel le serveur distant écoute
+     * @throws UnknownHostException
+     * @throws IOException 
+     */
+    public Client(String address, int port) throws UnknownHostException, IOException {
+        this.address = address;
+        this.port = port;
+        InetAddress ipAddress = InetAddress.getByName(address);
+        this.socket = new Socket(ipAddress, port);
+        this.out = new ObjectOutputStream(this.socket.getOutputStream());
+        Thread receiverThread = new Thread(new ClientReceive(this, this.socket));
+        receiverThread.start();
     }
-
-    public void messageReceived(Message mess) {
-        System.out.println("\nMessage reçu : " + mess);
-    }
-
-    public void sendMessage(Message mess, ObjectOutputStream out) {
-        try {
-            out.writeObject(mess);
-            out.flush();
-        } catch (IOException var4) {
-            System.out.println("Probléme pour envoyer le message");
-            var4.printStackTrace();
+    
+    /**
+     * Méthode appelée quand le serveur met fin à la connexion
+     * @throws IOException 
+     */
+    public void disconnectedServer() throws IOException {
+        System.out.println("Oups, il semblerait que le serveur ait mit fin à la connexion !");
+        if (this.in != null) {
+            this.in.close();
         }
-
-    }
-
-    public void disconnectedServer() {
-        if (this.out != null || this.socket != null || this.in != null) {
-            try {
-                this.out.close();
-                this.socket.close();
-                this.in.close();
-                System.exit(0);
-            } catch (IOException var2) {
-                var2.printStackTrace();
-            }
+        if ( this.out != null) {
+            this.out.close();
         }
-
+        if ( this.socket != null) {
+            this.socket.close();
+        }
+        System.out.println("Extinction du programme.");
+        System.exit(0);
+    }
+    
+    /**
+     * Méthode servant à envoyer un message
+     * Cette méthode créer un nouveau thread
+     * @param message Le message à envoyer
+     */
+    public void sendMessage(String message) {
+        Thread senderThread = new Thread(new ClientSend(this.socket, this.out, message));
+        senderThread.start();
+    }
+    
+    /**
+     * Méthode appelée quand un message est reçue
+     * @param message Le message reçue
+     */
+    public void messageReceived(Message message) {
+        this.clientPanel.showNewMessage(message);   // Mise à jour de l'interface graphique
     }
 }

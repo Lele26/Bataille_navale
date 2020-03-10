@@ -1,42 +1,38 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package server;
 
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.IOException;
 
+/**
+ *
+ * @author p1623040
+ */
 public class Connection implements Runnable {
     private Server server;
     private ServerSocket serverSocket;
-
-    public Connection(Server s) {
-        try {
-            this.server = s;
-            this.serverSocket = new ServerSocket(this.server.getPort());
-        } catch (IOException var3) {
-            var3.printStackTrace();
-        }
-
+    
+    public Connection(Server server) throws IOException {
+        this.server = server;
+        this.serverSocket = new ServerSocket(server.getPort());
     }
-
+    
     public void run() {
         try {
             while(true) {
-                System.out.println("attente de nouveaux clients");
-                Socket sockNewClient = this.serverSocket.accept();
-                System.out.println("Connecté le client");
-                ConnectedClient newClient = new ConnectedClient(this.server, sockNewClient);
-                System.out.println("ajout du client dans la liste");
-                newClient.setId(this.server.getNumClients());
-                this.server.addClient(newClient);
-                System.out.println("Thread client");
+                Socket sockNewClient = serverSocket.accept();
+                ConnectedClient newClient = new ConnectedClient(server, sockNewClient);
+                server.addClient(newClient);
                 Thread threadNewClient = new Thread(newClient);
                 threadNewClient.start();
-                System.out.println("Thread client start");
             }
-        } catch (IOException var4) {
-            System.out.println("Classe Connection : Erreur IOException");
-            var4.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
-

@@ -71,9 +71,9 @@ public class CAuthentification implements Initializable {
 
         if (uc.CheckUser(user)){
             String address = "127.0.0.1";
-            Integer port = 1026;
+            Integer port = 1027;
             System.out.println("Connexion du client");
-            new Client(address, port);
+            Client client = new Client(address, port);
 
             final Node source = (Node) event.getSource();
             final Stage stage = (Stage) source.getScene().getWindow();

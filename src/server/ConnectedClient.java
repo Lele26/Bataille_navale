@@ -1,3 +1,6 @@
+/*
+ * Auteur : Jules BOURDAIS
+ */
 package server;
 
 import common.Message;
@@ -5,89 +8,88 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
+/**
+ * Classe représentant un client connecté au serveur
+ */
 public class ConnectedClient implements Runnable {
-    private int IdCounter = 0;
-    private int Id;
-    private String Username;
-    private String Pwd;
+    private static int idCounter = 0;
+    private int id;
     private Server server;
     private Socket socket;
     private ObjectInputStream in;
-    private ObjectOutputStream Out;
-
-    public ConnectedClient(Server se, Socket so) {
-        this.server = se;
-        this.socket = so;
-        this.Id = this.IdCounter++;
-        System.out.println("Constructeur connectedclient, id= " + this.Id);
-
-        try {
-            this.Out = new ObjectOutputStream(this.socket.getOutputStream());
-        } catch (IOException var4) {
-            var4.printStackTrace();
-        }
-
-        System.out.println("Nouvelle connection, id= " + this.Id);
+    private ObjectOutputStream out;
+    
+    /**
+     * Constructeur de la classe ConnectedClient
+     * @param server Le serveur
+     * @param socket Le socket du serveur
+     * @throws IOException 
+     */
+    public ConnectedClient(Server server, Socket socket) throws IOException {
+        this.server = server;
+        this.socket = socket;
+        this.id = idCounter;
+        idCounter++;
+        out = new ObjectOutputStream(socket.getOutputStream());
+        System.out.println("Nouvelle connection, id = " + id);
     }
-
+    
+    /**
+     * Méthode servant à envoyer un message au client
+     * @param mess Le message à envoyer
+     * @throws IOException 
+     */
+    public void sendMessage(Message mess) throws IOException {
+        this.out.writeObject(mess);
+        this.out.flush();
+    }
+    
+    /**
+     * Méthode servant à fermer la connexion du client
+     * @throws IOException 
+     */
+    public void closeClient() throws IOException {
+        this.in.close();
+        this.out.close();
+        this.socket.close();
+    }
+    
     public void run() {
         try {
-            this.in = new ObjectInputStream(this.socket.getInputStream());
+            in = new ObjectInputStream(socket.getInputStream());
             boolean isActive = true;
-
             while(isActive) {
-                Message mess = (Message)this.in.readObject();
-                if (mess == null) {
-                    isActive = false;
-                    this.server.disconnectedClient(this);
+                Message mess = (Message) in.readObject();
+                if ( mess != null ) {
+                    mess.setSender(String.valueOf(id));
+                    server.broadcastMessage(mess, id);
                 } else {
-                    System.out.println("message recu");
-                    System.out.println("run() connectedclient, id= " + this.Id);
-                    mess.setSender(String.valueOf(this.Id));
-                    this.server.broadcastMessage(mess, this.Id);
-                }
+                    server.disconnectedClient(this);
+                    isActive = false;
+                }   
             }
-        } catch (IOException var3) {
-            System.out.println("probleme inputStream");
-            var3.printStackTrace();
-        } catch (ClassNotFoundException var4) {
-            var4.printStackTrace();
+        } catch (IOException e) {
+            if ( e instanceof SocketException ) {
+                try {
+                    server.disconnectedClient(this);
+                } catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+            } else {
+                e.printStackTrace();
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
-
     }
-
-    public void sendMessage(Message mess) {
-        try {
-            this.Out.writeObject(mess);
-            this.Out.flush();
-        } catch (IOException var3) {
-            var3.printStackTrace();
-        }
-
-    }
-
-    public boolean ConnectedServer(String password, String Username){
-        return true;
-    }
-
-    public void closeClient() {
-        try {
-            this.in.close();
-            this.Out.close();
-            this.socket.close();
-        } catch (IOException var2) {
-            var2.printStackTrace();
-        }
-
-    }
-
+    
+    /**
+     * Accesseur de l'id du client
+     * @return int l'id du client
+     */
     public int getId() {
-        return this.Id;
-    }
-
-    public void setId(int id) {
-        this.Id = id;
+        return this.id;
     }
 }
-
