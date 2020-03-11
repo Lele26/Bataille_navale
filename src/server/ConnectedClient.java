@@ -15,6 +15,7 @@ import java.net.SocketException;
  */
 public class ConnectedClient implements Runnable {
     private static int idCounter = 0;
+    private String pseudo;
     private int id;
     private Server server;
     private Socket socket;
@@ -63,8 +64,14 @@ public class ConnectedClient implements Runnable {
             while(isActive) {
                 Message mess = (Message) in.readObject();
                 if ( mess != null ) {
+                    if(mess.getType()==2)
+                    {
+                        this.setPseudo(mess.getContent());
+                    }
+                    else{
                     mess.setSender(String.valueOf(id));
                     server.broadcastMessage(mess, id);
+                    }
                 } else {
                     server.disconnectedClient(this);
                     isActive = false;
@@ -91,5 +98,19 @@ public class ConnectedClient implements Runnable {
      */
     public int getId() {
         return this.id;
+    }
+
+    /**
+     * @return the pseudo
+     */
+    public String getPseudo() {
+        return pseudo;
+    }
+
+    /**
+     * @param pseudo the pseudo to set
+     */
+    public void setPseudo(String pseudo) {
+        this.pseudo = pseudo;
     }
 }

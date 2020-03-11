@@ -13,6 +13,7 @@ public class ClientSend implements Runnable {
     private Socket socket;
     private ObjectOutputStream out;
     private String message;
+    private int type;
     
     /**
      * Constructeur de la classe ClientSend
@@ -24,12 +25,20 @@ public class ClientSend implements Runnable {
         this.socket = socket;
         this.out = out;
         this.message = message;
+        this.type = 1;
+    }
+    
+    public ClientSend(Socket socket, ObjectOutputStream out, String message,int type) {
+        this.socket = socket;
+        this.out = out;
+        this.message = message;
+        this.type = type;
     }
     
     @Override
     public void run() {
         try {
-            Message mess = new Message("client", this.message);
+            Message mess = new Message("client", this.message,this.type);
             out.writeObject(mess);
             out.flush();
         } catch (IOException e) {

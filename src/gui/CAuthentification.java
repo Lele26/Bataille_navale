@@ -29,7 +29,7 @@ public class CAuthentification implements Initializable {
 
 
 
-
+    private CListJoueurs CListJoueurs ;
 
     @FXML
     private Text actiontarget ;
@@ -70,10 +70,7 @@ public class CAuthentification implements Initializable {
         user.password = this.getPwd().getText();
 
         if (uc.CheckUser(user)){
-            String address = "127.0.0.1";
-            Integer port = 1027;
-            System.out.println("Connexion du client");
-            Client client = new Client(address, port);
+            
 
             final Node source = (Node) event.getSource();
             final Stage stage = (Stage) source.getScene().getWindow();
@@ -81,6 +78,8 @@ public class CAuthentification implements Initializable {
             stage.setTitle("Bataille Navale - Joueurs connectés");
             stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("Ecran2_joueursconnectés.fxml"))));
             stage.show();
+            
+            Main.client.sendConnexionMessage(user.login);
 
         }
         else{

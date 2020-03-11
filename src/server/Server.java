@@ -52,4 +52,15 @@ public class Server {
     public int getPort() {
         return this.port;
     }
+    
+    public void envoieMessageListe () throws IOException{
+        String message = null;
+        for (ConnectedClient client : clients) {
+            message = client.getPseudo()+";";
+        }
+        Message envoiemessage = new Message("Serveur",message,3);
+        broadcastMessage(envoiemessage,0);
+    }
+    
+
 }

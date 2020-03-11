@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * Classe encapsulant les interactions avec le serveur
@@ -20,6 +21,7 @@ public class Client {
     private ObjectInputStream in;
     private ObjectOutputStream out;
     public ClientPanel clientPanel;
+    private List<String> listPseudos;
     
     /**
      * Constructeur de la classe Client
@@ -67,11 +69,37 @@ public class Client {
         senderThread.start();
     }
     
+    public void sendConnexionMessage(String pseudo){
+        Thread senderThread = new Thread(new ClientSend(this.socket,this.out,pseudo,2));
+        senderThread.start();
+    }
+    
     /**
      * Méthode appelée quand un message est reçue
      * @param message Le message reçue
      */
     public void messageReceived(Message message) {
-        this.clientPanel.showNewMessage(message);   // Mise à jour de l'interface graphique
+        System.out.println(message.getContent());
+        if(message.getType()==3){
+            String[] list = message.getContent().split(";");
+            for( int i = 0; i <= list.length - 1; i++)
+            {
+                getListPseudos().add(list[i]);
+            }
+        }
+    }
+
+    /**
+     * @return the listPseudos
+     */
+    public List<String> getListPseudos() {
+        return listPseudos;
+    }
+
+    /**
+     * @param listPseudos the listPseudos to set
+     */
+    public void setListPseudos(List<String> listPseudos) {
+        this.listPseudos = listPseudos;
     }
 }
